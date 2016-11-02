@@ -4,7 +4,7 @@ from collections import deque
 class BufferRunner:
     # !! Account for out-of-order messages
     
-    def __init__(self, function, maxlen=1e6, count_interval=100, time_interval=3600):
+    def __init__(self, function, maxlen=1e6, count_interval=1000, time_interval=3600):
         self.function = function
         
         self.buffer = deque(maxlen=maxlen)
