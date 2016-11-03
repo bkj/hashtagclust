@@ -6,13 +6,6 @@
     Get messages from Kafka queue
     
     !! sudo service avahi-daemon stop
-    
-    Ex:
-    ./kafka2disk.py --earliest --max-records 100000000 | gzip -c > earliest.gz
-    
-    Ex:
-    ./kafka2disk.py --earliest |\
-        split -d -l 1000000 --filter='gzip > $FILE.gz' - ./data/earliest-20161027.ppart-
 """
 
 import argparse
