@@ -18,9 +18,12 @@ import tempfile
 import numpy as np
 import ultrajson as json
 
-import fasttext as ft
-import twutils
+from uuid import uuid1
+from kafka import KafkaProducer
+from scipy.cluster import hierarchy
 
+import twutils
+import fasttext as ft
 from buffer_runner import BufferRunner
 
 sys.stdin = codecs.getreader("utf-8")(sys.stdin)
@@ -46,9 +49,6 @@ class UnicodeNamedTemporaryFile:
 
 # --
 # Model
-
-from uuid import uuid1
-from kafka import KafkaProducer
 
 class HashtagPublisher:
     
@@ -88,8 +88,6 @@ class HashtagPublisher:
         
         self.producer.flush()
 
-
-from scipy.cluster import hierarchy
 
 class HashtagClusterer:
     
