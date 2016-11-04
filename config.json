@@ -4,24 +4,30 @@
             "minn": 0,
             "maxn": 0,
             "min_count": 10,
-            "min_count_label": 1,
-            "epoch": 1,
+            "min_count_label": 50,
+            "epoch": 20,
             "loss": "ns",
-            "neg": 20,
+            "neg": 50,
             "dim": 100,
             "thread": 5,
             "verbose": 0
       },
       "clusterer" : {
-            "n_clusters" : 50,
+            "p_cluster" : 0.01,
             "n_most_common" : 5000
       },
       "publisher" : {
-            "topic" : "bkj-hashtag-test",
-            "bootstrap_servers" : ["10.105.0.5:9092", "10.105.0.7:9092", "10.105.0.9:9092", "10.105.0.11:9092", "10.105.0.13:9092"]
+            "topic" : "bkj-hashtag-test-v2",
+            "bootstrap_servers" : [
+                  "10.105.0.5:9092", 
+                  "10.105.0.7:9092", 
+                  "10.105.0.9:9092", 
+                  "10.105.0.11:9092", 
+                  "10.105.0.13:9092"
+            ]
       },
       "buffer" : {
             "maxlen" : 1000000,
-            "count_interval" : 100000
+            "count_interval" : 5000
       }
 }

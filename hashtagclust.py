@@ -10,17 +10,21 @@
 
 # !! Tokenizing other languages
 # !! Dealing w/ out-of-order messages
+# !! "Message count" is currently returning hashtag counts.  Fine w/ me, but may need to be changed.
 
 import os
 import sys
+import logging
 import codecs
 import tempfile
 import numpy as np
 import ultrajson as json
 
+from datetime import datetime
 from uuid import uuid1
 from kafka import KafkaProducer
 from scipy.cluster import hierarchy
+from collections import Counter
 
 import twutils
 import fasttext as ft
@@ -29,13 +33,15 @@ from buffer_runner import BufferRunner
 sys.stdin = codecs.getreader("utf-8")(sys.stdin)
 sys.stdout = codecs.getwriter("utf-8")(sys.stdout)
 
+logging.basicConfig(filename='./logs/log-%s' % datetime.now().strftime('%Y%m%d%H%M%S'), format='%(asctime)s %(message)s', level=logging.INFO)
+
 # --
 # Functions
 
 class UnicodeNamedTemporaryFile:
     
-    def __init__(self):
-        f = tempfile.NamedTemporaryFile(delete=False)
+    def __init__(self, prefix):
+        f = tempfile.NamedTemporaryFile(prefix='hc-%s' % prefix, delete=False)
         self.name = f.name
         f.close()
     
@@ -60,7 +66,7 @@ class HashtagPublisher:
         )
         self.topic = config['topic']
         
-    def __call__(self, campaignId, data, time_interval):
+    def __call__(self, campaignId, data, time_interval, counter):
         clusters = np.unique(data['clusters'])
         for cluster in clusters:
             sel = data['clusters'] == cluster
@@ -84,6 +90,8 @@ class HashtagPublisher:
                 "urls": None,
                 "photos": None,
                 "importanceScore": None,
+                
+                "counter" : counter
             })
         
         self.producer.flush()
@@ -96,25 +104,28 @@ class HashtagClusterer:
     
     def __call__(self, data):
         """ Perform average linkage hierarchical clustering on embeddings """
+        labs = data['labs'][:self.config['n_most_common']]
+        lab_counts = data['lab_counts'][:self.config['n_most_common']]
+        
         nvecs = data['vecs'][:self.config['n_most_common']]
         nvecs /= np.sqrt((nvecs ** 2).sum(axis=1, keepdims=True))
         link = hierarchy.linkage(nvecs, method='average', metric='cosine')
+        
         return {
-            "labs"       : data['labs'][:self.config['n_most_common']],
-            "lab_counts" : data['lab_counts'][:self.config['n_most_common']],
-            "clusters"   : hierarchy.cut_tree(link, n_clusters=self.config['n_clusters']).squeeze()
+            "labs"       : labs,
+            "lab_counts" : lab_counts,
+            "clusters"   : hierarchy.cut_tree(link, n_clusters=5).squeeze()
         }
 
 
 class HashtagSupervised:
-
-    def __init__(self, output, config, verbose=True):
+    
+    def __init__(self, output, config):
         self.output  = output
         self.campaignId = os.path.basename(output)
         
         self.config = config
         self.counter = 0
-        self.verbose = verbose
     
     def run(self, data):
         self.counter += 1
@@ -125,17 +136,14 @@ class HashtagSupervised:
             self.publisher = HashtagPublisher(self.config['publisher'])
             
             # Train model
-            if self.verbose:
-                print "\n Starting: %s" % model_name
+            logging.info("Starting: %s" % model_name)
             
             self.model = self.train(model_name, data)
-            
             label_vectors = self.get_label_vectors()
             clusters = self.clusterer(label_vectors)
-            self.publisher(self.campaignId, clusters, self.time_interval)
+            self.publisher(self.campaignId, clusters, self.time_interval, self.counter)
             
-            if self.verbose:
-                print "\n Done: %s" % model_name
+            logging.info("Done: %s" % model_name)
             
             os._exit(0)
     
@@ -147,7 +155,7 @@ class HashtagSupervised:
         self.time_interval = [min(timestamps), max(timestamps)]
         
         # !! Would be better if we could keep in memory, obviously
-        tmp = UnicodeNamedTemporaryFile()
+        tmp = UnicodeNamedTemporaryFile(os.path.basename(model_name))
         tmp.write('\n'.join(content))
         
         model = ft.supervised(
@@ -156,7 +164,7 @@ class HashtagSupervised:
             **self.config['fasttext']
         )
         
-        tmp.close()
+        # tmp.close()
         return model
     
     def get_label_vectors(self):
@@ -167,24 +175,32 @@ class HashtagSupervised:
             "lab_counts" : np.array(self.model._model.dict_get_label_counts()),
         }
 
-# def clean_obj(x):
-#     campaign_tags = x['campaign_tags']
-#     lang = x['doc']['lang']
-#     if lang == 'en':
-#         for campaign_tag in campaign_tags:
-#             yield {
-#                 'campaignId': campaign_tag['campaignId'],
-#                 'timestamp': x['norm']['timestamp'],
-#                 'clean_body': twutils.clean_tweet(x['norm']['body']),
-#             }
+def clean_obj(x):
+    for campaign_tag in x['campaign_tags']:
+        yield {
+            'lang' : x['doc']['lang'],
+            'campaignId': campaign_tag['campaignId'],
+            'timestamp': x['norm']['timestamp'],
+            'clean_body': twutils.clean_tweet(x['norm']['body']),
+        }
 
 
-# def clean_gen(gen):
-#     for x in gen:
-#         for y in clean_obj(json.loads(x)):
-#             yield y
+def clean_gen_ist(gen):
+    counter = Counter()
+    for i,x in enumerate(gen):
+        try:
+            for y in clean_obj(json.loads(x)):
+                if y['lang'] == 'en':
+                    yield y
+                counter[y['lang']] += 1
+                
+            if not i % 1000:
+                logging.info('clean_gen_ist : %s' % str(counter))
+        except:
+            pass
 
-def clean_gen(gen):
+
+def clean_gen_local(gen):
     for i,x in enumerate(gen):
         try:
             obj = json.loads(x)
@@ -199,20 +215,22 @@ def clean_gen(gen):
 # --
 # Run
 
+clean_gen = clean_gen_ist
+
 if __name__ == "__main__":
     config = json.load(open('config.json'))
-    print(config)
+    logging.info(str(config))
     
     brs = {}
     for i, obj in enumerate(clean_gen(sys.stdin)):
-        if not i % 25000:
-            print i
+        if not i % 100:
+            logging.info("Processed %d records" % i)
         
         cid = str(obj['campaignId'])
         
         # Create campaign model, if doesn't exist
         if not brs.get(cid):
-            print >> sys.stderr, 'creating %s' % cid
+            logging.info('creating %s' % cid)
             cid_model = HashtagSupervised('./output/%s' % cid, config)
             brs[cid] = BufferRunner(cid_model.run, **config['buffer'])
         
