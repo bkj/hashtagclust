@@ -25,6 +25,7 @@ from uuid import uuid1
 from kafka import KafkaProducer
 from scipy.cluster import hierarchy
 from collections import Counter
+from time import sleep
 
 import twutils
 import fasttext as ft
@@ -175,47 +176,41 @@ class HashtagSupervised:
             "lab_counts" : np.array(self.model._model.dict_get_label_counts()),
         }
 
+# def clean_obj(x):
+#     for campaign_tag in x['campaign_tags']:
+#         yield {
+#             'lang' : x['doc']['lang'],
+#             'campaignId': campaign_tag['campaignId'],
+#             'timestamp': x['norm']['timestamp'],
+#             'clean_body': twutils.clean_tweet(x['norm']['body']),
+#         }
+
 def clean_obj(x):
     for campaign_tag in x['campaign_tags']:
         yield {
-            'lang' : x['doc']['lang'],
+            'lang' : x['lang'],
             'campaignId': campaign_tag['campaignId'],
-            'timestamp': x['norm']['timestamp'],
-            'clean_body': twutils.clean_tweet(x['norm']['body']),
+            'timestamp': x['timestamp'],
+            'clean_body': twutils.clean_tweet(x['clean_body']),
         }
 
-
-def clean_gen_ist(gen):
-    counter = Counter()
+def clean_gen(gen):
+    # counter = Counter()
     for i,x in enumerate(gen):
         try:
             for y in clean_obj(json.loads(x)):
                 if y['lang'] == 'en':
                     yield y
-                counter[y['lang']] += 1
                 
-            if not i % 1000:
-                logging.info('clean_gen_ist : %s' % str(counter))
-        except:
-            pass
-
-
-def clean_gen_local(gen):
-    for i,x in enumerate(gen):
-        try:
-            obj = json.loads(x)
-            yield {
-                "campaignId" : 'london-test',
-                "timestamp" : obj['postedTime'],
-                "clean_body" : obj['clean_body']
-            }
+                # counter[y['lang']] += 1
+                
+            # if not i % 1000:
+                # logging.info('clean_gen : %s' % str(counter))
         except:
             pass
 
 # --
 # Run
-
-clean_gen = clean_gen_ist
 
 if __name__ == "__main__":
     config = json.load(open('config.json'))
