@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-    hashtagclust.py
+    hashclust.py
     
     Ex:
         time cat data/tmp.jl | ./hashtagclust.py
@@ -11,6 +11,8 @@
 # !! Tokenizing other languages
 # !! Dealing w/ out-of-order messages
 # !! "Message count" is currently returning hashtag counts.  Fine w/ me, but may need to be changed.
+# !! Retweets sortof mess this up
+# !! How to choose number of clusters
 
 import os
 import sys
@@ -31,7 +33,7 @@ import twutils
 import fasttext as ft
 from buffer_runner import BufferRunner
 
-sys.stdin = codecs.getreader("utf-8")(sys.stdin)
+sys.stdin = codecs.getwriter("utf-8")(sys.stdin)
 sys.stdout = codecs.getwriter("utf-8")(sys.stdout)
 
 logging.basicConfig(filename='./logs/log-%s' % datetime.now().strftime('%Y%m%d%H%M%S'), format='%(asctime)s %(message)s', level=logging.INFO)
@@ -67,12 +69,13 @@ class HashtagPublisher:
         )
         self.topic = config['topic']
         
-    def __call__(self, campaignId, data, time_interval, counter):
+    def __call__(self, campaignId, data, time_interval, counter, total_message_count):
         clusters = np.unique(data['clusters'])
         for cluster in clusters:
             sel = data['clusters'] == cluster
             hashtags = data['labs'][sel]
-            self.producer.send(self.topic, {
+            
+            obj = {
                 "uid": str(uuid1()),
                 "campaignId": campaignId,
                 
@@ -83,7 +86,7 @@ class HashtagPublisher:
                 "hashtags": list(hashtags),
                 
                 "topicMessageCount": data['lab_counts'][sel].sum(),
-                "totalMessageCount": data['lab_counts'].sum(),
+                "totalMessageCount": total_message_count,
                 
                 "newsEventIds": None,
                 "location": None,
@@ -93,7 +96,9 @@ class HashtagPublisher:
                 "importanceScore": None,
                 
                 "counter" : counter
-            })
+            }
+            logging.info(json.dumps(obj))
+            self.producer.send(self.topic, obj)
         
         self.producer.flush()
 
@@ -112,10 +117,12 @@ class HashtagClusterer:
         nvecs /= np.sqrt((nvecs ** 2).sum(axis=1, keepdims=True))
         link = hierarchy.linkage(nvecs, method='average', metric='cosine')
         
+        n_clusters = max(5, int(len(labs) * self.config['p_cluster']))
+        
         return {
             "labs"       : labs,
             "lab_counts" : lab_counts,
-            "clusters"   : hierarchy.cut_tree(link, n_clusters=5).squeeze()
+            "clusters"   : hierarchy.cut_tree(link, n_clusters=n_clusters).squeeze()
         }
 
 
@@ -137,14 +144,17 @@ class HashtagSupervised:
             self.publisher = HashtagPublisher(self.config['publisher'])
             
             # Train model
-            logging.info("Starting: %s" % model_name)
-            
+            logging.info("Starting: %s (%d records)" % (model_name, len(data)))
             self.model = self.train(model_name, data)
             label_vectors = self.get_label_vectors()
-            clusters = self.clusterer(label_vectors)
-            self.publisher(self.campaignId, clusters, self.time_interval, self.counter)
-            
-            logging.info("Done: %s" % model_name)
+            if label_vectors:
+                logging.info("Clustering: %s" % model_name)
+                clusters = self.clusterer(label_vectors)
+                logging.info("Publishing: %s" % model_name)
+                self.publisher(self.campaignId, clusters, self.time_interval, self.counter, len(data))
+                logging.info("Published: %s" % model_name)
+            else:
+                logging.info("No labels for: %s" % model_name)
             
             os._exit(0)
     
@@ -169,12 +179,15 @@ class HashtagSupervised:
         return model
     
     def get_label_vectors(self):
-        vecs = map(self.model._model.dict_get_label_vector, range(self.model._model.dict_nlabels()))    
-        return { 
-            "labs"       : np.array(self.model.labels), 
-            "vecs"       : np.vstack(vecs),
-            "lab_counts" : np.array(self.model._model.dict_get_label_counts()),
-        }
+        vecs = map(self.model._model.dict_get_label_vector, range(self.model._model.dict_nlabels()))
+        if len(vecs):
+            return { 
+                "labs"       : np.array(self.model.labels), 
+                "vecs"       : np.vstack(vecs),
+                "lab_counts" : np.array(self.model._model.dict_get_label_counts()),
+            }
+        else:
+            return None
 
 # def clean_obj(x):
 #     for campaign_tag in x['campaign_tags']:
@@ -195,19 +208,13 @@ def clean_obj(x):
         }
 
 def clean_gen(gen):
-    # counter = Counter()
     for i,x in enumerate(gen):
         try:
             for y in clean_obj(json.loads(x)):
                 if y['lang'] == 'en':
                     yield y
-                
-                # counter[y['lang']] += 1
-                
-            # if not i % 1000:
-                # logging.info('clean_gen : %s' % str(counter))
         except:
-            pass
+            print 'unicode error', x
 
 # --
 # Run

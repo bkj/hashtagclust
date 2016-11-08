@@ -1,3 +1,7 @@
+tmp/*
+output*
+logs/*
+
 data/*
 output/*
 *jl
