@@ -44,7 +44,7 @@ logging.basicConfig(filename='./logs/log-%s' % datetime.now().strftime('%Y%m%d%H
 class UnicodeNamedTemporaryFile:
     
     def __init__(self, prefix):
-        f = tempfile.NamedTemporaryFile(prefix='hc-%s' % prefix, delete=False)
+        f = tempfile.NamedTemporaryFile(prefix='hc-%s-' % prefix, delete=False)
         self.name = f.name
         f.close()
     
@@ -189,30 +189,29 @@ class HashtagSupervised:
         else:
             return None
 
-# def clean_obj(x):
-#     for campaign_tag in x['campaign_tags']:
-#         yield {
-#             'lang' : x['doc']['lang'],
-#             'campaignId': campaign_tag['campaignId'],
-#             'timestamp': x['norm']['timestamp'],
-#             'clean_body': twutils.clean_tweet(x['norm']['body']),
-#         }
-
 def clean_obj(x):
     for campaign_tag in x['campaign_tags']:
         yield {
-            'lang' : x['lang'],
+            'lang' : x['doc']['lang'],
             'campaignId': campaign_tag['campaignId'],
-            'timestamp': x['timestamp'],
-            'clean_body': twutils.clean_tweet(x['clean_body']),
+            'timestamp': x['norm']['timestamp'],
+            'clean_body': twutils.clean_tweet(x['norm']['body'], polyglot=True),
         }
+
+# def clean_obj(x):
+#     for campaign_tag in x['campaign_tags']:
+#         yield {
+#             'lang' : x['lang'],
+#             'campaignId': campaign_tag['campaignId'],
+#             'timestamp': x['timestamp'],
+#             'clean_body': twutils.clean_tweet(x['clean_body'], polyglot=True),
+#         }
 
 def clean_gen(gen):
     for i,x in enumerate(gen):
         try:
             for y in clean_obj(json.loads(x)):
-                if y['lang'] == 'en':
-                    yield y
+                yield y
         except:
             print 'unicode error', x
 
