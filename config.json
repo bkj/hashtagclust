@@ -13,7 +13,7 @@
             "verbose": 0
       },
       "clusterer" : {
-            "p_cluster" : 0.01,
+            "p_cluster" : 0.1,
             "n_most_common" : 5000
       },
       "publisher" : {
