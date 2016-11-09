@@ -29,4 +29,4 @@ def clean_gen(gen):
             for y in clean_obj(json.loads(x)):
                 yield y
         except:
-            print logging.warning("unicode error: %s" % json.dumps(x))
+            print "unicode error: %s" % json.dumps(x)

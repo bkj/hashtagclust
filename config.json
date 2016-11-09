@@ -17,7 +17,7 @@
             "n_most_common" : 5000
       },
       "publisher" : {
-            "topic" : "bkj-hashtag-test-v2",
+            "topic" : "bkj-hashtag-test-live",
             "bootstrap_servers" : [
                   "10.105.0.5:9092", 
                   "10.105.0.7:9092", 

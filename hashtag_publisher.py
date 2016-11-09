@@ -1,4 +1,5 @@
 import json
+import logging
 from uuid import uuid1
 from kafka import KafkaProducer
 
