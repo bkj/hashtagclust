@@ -19,7 +19,6 @@ import os
 import sys
 import json
 import codecs
-import ultrajson as json
 from datetime import datetime
 
 import twutils

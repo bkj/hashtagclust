@@ -17,10 +17,10 @@ setup(
 	packages=['hashclust'],
 	version="0.0.0",
 	install_requires=[
-		"ultrajson>=1.35",
-		"scipy>=0.18.1",
-		"numpy>=1.11.2",
-		"kafka>=1.3.1"
+		"ujson>=1.35",
+		"scipy>=0.18",
+		"numpy>=1.11",
+		"kafka>=1.3"
 	],
 	entry_points={'console_scripts': ['hashclust = hashclust.__main__:main']},
 )
