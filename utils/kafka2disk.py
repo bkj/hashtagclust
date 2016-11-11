@@ -9,7 +9,7 @@
 """
 
 import argparse
-import ultrajson as json
+import ujson as json
 from kafka import KafkaConsumer
 
 def parse_args():
