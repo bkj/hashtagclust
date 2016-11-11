@@ -20,11 +20,7 @@ setup(
 		"ultrajson>=1.35",
 		"scipy>=0.18.1",
 		"numpy>=1.11.2",
-		"kafka>=1.3.1",
-		"twutils"
-	],
-	dependency_links=[
-		"git+ssh://git@github.com/bkj/twutils.git"
+		"kafka>=1.3.1"
 	],
 	entry_points={'console_scripts': ['hashclust = hashclust.__main__:main']},
 )
