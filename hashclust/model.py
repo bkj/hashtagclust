@@ -3,7 +3,9 @@ import logging
 import numpy as np
 import fasttext as ft
 
-from hashtag_utils import UnicodeNamedTemporaryFile
+from clusterer import HashtagClusterer
+from publisher import HashtagPublisher
+from utils import UnicodeNamedTemporaryFile
 
 class HashtagSupervised:
     
@@ -36,6 +38,10 @@ class HashtagSupervised:
         # Train model
         logging.info("Starting: %s (%d records)" % (model_name, len(data)))
         self.model = self.train(model_name, data)
+        if not self.model:
+            logging.info("Failed: %s" % model_name)
+            return
+        
         label_vectors = self.get_label_vectors()
         if label_vectors:
             logging.info("Clustering: %s" % model_name)
@@ -45,7 +51,6 @@ class HashtagSupervised:
             logging.info("Published: %s" % model_name)
         else:
             logging.info("No labels for: %s" % model_name)
-    
     
     def train(self, model_name, data):
         
@@ -58,14 +63,17 @@ class HashtagSupervised:
         tmp = UnicodeNamedTemporaryFile(os.path.basename(model_name))
         tmp.write('\n'.join(content))
         
-        model = ft.supervised(
-            tmp.name,
-            model_name,
-            **self.config['fasttext']
-        )
-        
-        # tmp.close()
-        return model
+        try:
+            model = ft.supervised(
+                tmp.name,
+                model_name,
+                **self.config['fasttext']
+            )
+            # tmp.close()
+            return model
+        except:
+            # tmp.close()
+            return None
     
     def get_label_vectors(self):
         vecs = map(self.model._model.dict_get_label_vector, range(self.model._model.dict_nlabels()))

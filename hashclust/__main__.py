@@ -12,6 +12,7 @@
         !! "Message count" is currently returning hashtag counts.  Fine w/ me, but may need to be changed.
         !! Retweets sortof mess this up
         !! How to choose number of clusters
+        !! Restarting after failure -- should reload from output files
 """
 
 
@@ -23,9 +24,6 @@ from datetime import datetime
 
 import twutils
 from buffer_runner import BufferRunner
-
-from hashtag_clusterer import HashtagClusterer
-from hashtag_publisher import HashtagPublisher
 from hashtag_model import HashtagSupervised
 from hashtag_io import clean_gen
 

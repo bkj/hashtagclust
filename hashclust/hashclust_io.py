@@ -4,7 +4,6 @@ try:
 except:
     import json
 
-
 # --
 # Model
 
@@ -25,8 +24,8 @@ def clean_obj(x):
 
 def clean_gen(gen):
     for x in gen:
-        try:
-            for y in clean_obj(json.loads(x)):
-                yield y
-        except:
-            print "unicode error: %s" % json.dumps(x)
+        # try:
+        for y in clean_obj(json.loads(x)):
+            yield y
+        # except:
+        #     print "unicode error: %s" % json.dumps(x)

@@ -1,5 +1,6 @@
 import json
 import logging
+import numpy as np
 from uuid import uuid1
 from kafka import KafkaProducer
 
