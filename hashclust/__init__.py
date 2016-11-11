@@ -1,1 +1,1 @@
-from hashtag_model import HashtagSupervised
+from model import HashtagSupervised

@@ -24,7 +24,7 @@ from datetime import datetime
 
 import twutils
 from buffer_runner import BufferRunner
-from hashtag_model import HashtagSupervised
+from model import HashtagSupervised
 from hashtag_io import clean_gen
 
 sys.stdin = codecs.getwriter("utf-8")(sys.stdin)
