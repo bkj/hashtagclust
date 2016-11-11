@@ -15,7 +15,7 @@
         !! Restarting after failure -- should reload from output files
 """
 
-
+import os
 import sys
 import json
 import codecs
@@ -23,24 +23,32 @@ import ultrajson as json
 from datetime import datetime
 
 import twutils
-from buffer_runner import BufferRunner
-from model import HashtagSupervised
-from hashtag_io import clean_gen
+from hashclust import BufferRunner, HashtagSupervised
+from hashclust.hashtag_io import clean_gen
 
 sys.stdin = codecs.getwriter("utf-8")(sys.stdin)
 
 import logging
-logging.basicConfig(
-    filename='./logs/log-%s' % datetime.now().strftime('%Y%m%d%H%M%S'), 
-    format='%(asctime)s %(message)s', 
-    level=logging.INFO
-)
-
+\
 # --
 # Run
 
-if __name__ == "__main__":
-    config = json.load(open('config.json'))
+def main():
+    if len(sys.argv) == 1:
+        raise Exception('need to pass config file')
+    
+    config = json.load(open(sys.argv[1]))
+    
+    if not os.path.exists(config['log_path']):
+        os.mkdir(config['log_path'])
+    
+    log_file = os.path.join(config['log_path'], 'log-%s' % datetime.now().strftime('%Y%m%d%H%M%S'))
+    logging.basicConfig(
+        filename=log_file, 
+        format='%(asctime)s %(message)s', 
+        level=logging.INFO
+    )
+    
     logging.info(str(config))
     
     brs = {}

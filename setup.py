@@ -25,5 +25,6 @@ setup(
 	],
 	dependency_links=[
 		"git+ssh://git@github.com/bkj/twutils.git"
-	]
+	],
+	entry_points={'console_scripts': ['hashclust = hashclust.__main__:main']},
 )
