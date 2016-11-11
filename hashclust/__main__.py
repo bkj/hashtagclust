@@ -29,20 +29,22 @@ from hashclust.hashtag_io import clean_gen
 sys.stdin = codecs.getwriter("utf-8")(sys.stdin)
 
 import logging
-\
+
 # --
 # Run
 
 def main():
+    
     if len(sys.argv) == 1:
         raise Exception('need to pass config file')
     
     config = json.load(open(sys.argv[1]))
     
-    if not os.path.exists(config['log_path']):
-        os.mkdir(config['log_path'])
+    if not os.path.exists(config['log_dir']):
+        os.mkdir(config['log_dir'])
     
-    log_file = os.path.join(config['log_path'], 'log-%s' % datetime.now().strftime('%Y%m%d%H%M%S'))
+    log_file = os.path.join(config['log_dir'], 'log-%s' % datetime.now().strftime('%Y%m%d%H%M%S'))
+    print "hashclust logging to: %s" % log_file
     logging.basicConfig(
         filename=log_file, 
         format='%(asctime)s %(message)s', 
