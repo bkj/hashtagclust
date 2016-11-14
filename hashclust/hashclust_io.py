@@ -1,6 +1,6 @@
 import twutils
 try:
-    import ultrajson as json
+    import ujson as json
 except:
     import json
 
