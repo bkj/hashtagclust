@@ -3,7 +3,7 @@ hashclust/__init__.py
 hashclust/__main__.py
 hashclust/buffer_runner.py
 hashclust/clusterer.py
-hashclust/hashclust_io.py
+hashclust/io.py
 hashclust/model.py
 hashclust/publisher.py
 hashclust/utils.py
@@ -11,5 +11,4 @@ hashclust.egg-info/PKG-INFO
 hashclust.egg-info/SOURCES.txt
 hashclust.egg-info/dependency_links.txt
 hashclust.egg-info/entry_points.txt
-hashclust.egg-info/requires.txt
 hashclust.egg-info/top_level.txt
