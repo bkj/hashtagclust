@@ -23,7 +23,7 @@ from datetime import datetime
 
 import twutils
 from hashclust import BufferRunner, HashtagSupervised
-from hashclust.hashtag_io import clean_gen
+import hashclust.io as hio
 
 sys.stdin = codecs.getwriter("utf-8")(sys.stdin)
 
@@ -53,7 +53,7 @@ def main():
     logging.info(str(config))
     
     brs = {}
-    for i, obj in enumerate(clean_gen(sys.stdin)):
+    for i, obj in enumerate(hio.clean_gen(sys.stdin)):
         
         if not obj:
             continue
