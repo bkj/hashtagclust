@@ -1,12 +1,12 @@
 #!/bin/bash
 
 sudo apt-get update
-sudo apt-get install -y wget git
+sudo apt-get install -y wget git build-essential libicu-dev \
+    default-jdk python-numpy cython python-scipy libicu-dev
 
-wget https://repo.continuum.io/archive/Anaconda2-4.2.0-Linux-x86_64.sh
-bash Anaconda2-4.2.0-Linux-x86_64.sh -b -p ~/anaconda2
-echo 'export PATH=$HOME/anaconda2/bin:$PATH' >> .bashrc
-source .bashrc
+wget https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64
+chmod +x jq-linux64
+sudo mv jq-linux64 /usr/bin/jq
 
 # Install fastText
 mkdir -p ~/software
@@ -24,4 +24,7 @@ python setup.py install
 mkdir -p ~/projects
 cd ~/projects
 git clone https://github.com/bkj/hashtagclust
-
+cd hashtagclust
+git checkout package
+pip install -r requirements.txt
+python setup.py install
