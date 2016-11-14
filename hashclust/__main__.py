@@ -19,18 +19,14 @@ import os
 import sys
 import json
 import codecs
+import logging
 from datetime import datetime
 
 import twutils
-from hashclust import BufferRunner, HashtagSupervised
 import hashclust.io as hio
+from hashclust import DiskBufferRunner, HashtagSupervised
 
 sys.stdin = codecs.getwriter("utf-8")(sys.stdin)
-
-import logging
-
-# --
-# Run
 
 def main():
     
@@ -39,8 +35,9 @@ def main():
     
     config = json.load(open(sys.argv[1]))
     
-    if not os.path.exists(config['log_dir']):
-        os.mkdir(config['log_dir'])
+    for path in [config['log_dir'], config['output_dir'], config['data_dir']]:
+        if not os.path.exists(path):
+            os.mkdir(path)
     
     log_file = os.path.join(config['log_dir'], 'log-%s' % datetime.now().strftime('%Y%m%d%H%M%S'))
     print "hashclust logging to: %s" % log_file
@@ -67,11 +64,19 @@ def main():
         # Create campaign model, if doesn't exist
         if not brs.get(cid):
             logging.info('creating %s' % cid)
-            cid_model = HashtagSupervised('./output/%s' % cid, config)
-            brs[cid] = BufferRunner(cid_model.run, **config['buffer'])
+            
+            model_path = os.path.join(config['output_dir'], cid)
+            data_path = os.path.join(config['data_dir'], cid)
+            
+            model = HashtagSupervised(model_path, config)
+            brs[cid] = DiskBufferRunner(
+                model.run,
+                filename=data_path,
+                **config['buffer']
+            )
         
         # Add message
-        brs[cid].add({
-            "timestamp" : obj['timestamp'],
-            "content" : obj['clean_body']
+        brs[cid].add(**{
+            "obj_memory" : obj['timestamp'],
+            "obj_disk" : obj['clean_body']
         })
