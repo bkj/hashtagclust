@@ -1,3 +1,8 @@
 git+https://github.com/bkj/twutils
 git+https://github.com/bkj/emoji
 polyglot
+numpy>=1.11
+scipy>=0.18
+ujson>=1.35
+sh>=1.11
+kafka>=1.3
