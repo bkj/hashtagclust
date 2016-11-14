@@ -6,7 +6,6 @@ hashclust/clusterer.py
 hashclust/io.py
 hashclust/model.py
 hashclust/publisher.py
-hashclust/utils.py
 hashclust.egg-info/PKG-INFO
 hashclust.egg-info/SOURCES.txt
 hashclust.egg-info/dependency_links.txt

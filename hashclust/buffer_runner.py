@@ -2,8 +2,9 @@ import sh
 import codecs
 from collections import deque
 
+# !! Account for out-of-order messages
+
 class BufferRunner:
-    # !! Account for out-of-order messages
     
     def __init__(self, function, maxlen=1e6, count_interval=1000):
         self.function = function
@@ -27,7 +28,6 @@ class BufferRunner:
         return self.function(self.buffer)
 
 class DiskBufferRunner:
-    # !! Account for out-of-order messages
     
     def __init__(self, function, filename, maxlen=1e6, count_interval=10000):
         

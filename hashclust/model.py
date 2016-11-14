@@ -12,7 +12,6 @@ class HashtagSupervised:
     def __init__(self, output, config):
         self.output = output
         self.campaignId = os.path.basename(output)
-
         self.config = config
         self.counter = 0
 
