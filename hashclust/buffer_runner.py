@@ -70,6 +70,6 @@ class DiskBufferRunner:
     
     def _doRollover(self):
         tmp_name = self.filename + '.tmp'
-        _ = sh.tail('-n', self.maxlen, self.filename, _out=open(tmp_name, 'w'))
+        _ = sh.tail('-n', int(self.maxlen), self.filename, _out=open(tmp_name, 'w'))
         _ = sh.cp(tmp_name, self.filename)
 

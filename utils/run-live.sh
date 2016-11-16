@@ -4,7 +4,7 @@
 # Run from Kafks topic
 #
 
-./utils/kafka2disk.py --topic prod.qcr-io.normsplosion.message.out --earliest |\
+./utils/kafka2disk.py --topic prod.qcr-io.normsplosion.message.out |\
     jq -rc "{
         lang : .doc.lang,
         campaign_tags: .campaign_tags,

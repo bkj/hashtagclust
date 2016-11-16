@@ -3,7 +3,7 @@ hashclust/__init__.py
 hashclust/__main__.py
 hashclust/buffer_runner.py
 hashclust/clusterer.py
-hashclust/io.py
+hashclust/hc_io.py
 hashclust/model.py
 hashclust/publisher.py
 hashclust.egg-info/PKG-INFO

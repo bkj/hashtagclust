@@ -2,7 +2,8 @@
 
 sudo apt-get update
 sudo apt-get install -y wget git build-essential libicu-dev \
-    default-jdk python-numpy cython python-scipy libicu-dev
+    default-jdk cython libicu-dev \
+    libblas-dev liblapack-dev libatlas-base-dev gfortran
 
 wget https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64
 chmod +x jq-linux64
