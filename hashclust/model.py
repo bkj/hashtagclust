@@ -3,9 +3,10 @@ import logging
 import numpy as np
 import fasttext as ft
 
+from datetime import datetime
+
 from clusterer import HashtagClusterer
 from publisher import HashtagPublisher
-
 
 class HashtagSupervised:
 
@@ -35,7 +36,10 @@ class HashtagSupervised:
         
         text_path, timestamp_path = data_paths
         
-        timestamps = map(int, open(timestamp_path).read().splitlines())
+        timestamps = open(timestamp_path).read().splitlines()
+        timestamps = [int(datetime.strptime(d.split('+')[0], '%Y-%m-%dT%H:%M:%S').strftime('%s')) 
+            for d in timestamps]
+        
         n_records = len(timestamps)
         time_interval = [min(timestamps), max(timestamps)]
         
