@@ -65,18 +65,16 @@ def main():
         if not brs.get(cid):
             logging.info('creating %s' % cid)
             
-            model_path = os.path.join(config['output_dir'], cid)
-            data_path = os.path.join(config['data_dir'], cid)
-            
+            model_path     = os.path.join(config['output_dir'], cid)
             model = HashtagSupervised(model_path, config)
+            
+            data_path = os.path.join(config['data_dir'], cid + '-text')
+            timestamp_path = os.path.join(config['data_dir'], cid + '-timestamp')
             brs[cid] = DiskBufferRunner(
                 model.run,
-                filename=data_path,
+                filenames=(data_path, timestamp_path),
                 **config['buffer']
             )
         
         # Add message
-        brs[cid].add(**{
-            "obj_memory" : obj['timestamp'],
-            "obj_disk" : obj['clean_body']
-        })
+        brs[cid].add((obj['clean_body'], obj['timestamp']))

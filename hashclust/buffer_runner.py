@@ -1,8 +1,7 @@
 import sh
+import sys
 import codecs
 from collections import deque
-
-# !! Account for out-of-order messages
 
 class BufferRunner:
     
@@ -29,47 +28,48 @@ class BufferRunner:
 
 class DiskBufferRunner:
     
-    def __init__(self, function, filename, maxlen=1e6, count_interval=10000):
+    def __init__(self, function, filenames, maxlen=1e6, count_interval=10000):
         
         self.function = function
-        self.filename = filename
+        self.filenames = filenames
         
-        # In-memory buffer
-        self.membuff = deque(maxlen=maxlen)
-        
-        # On-disk buffer
-        self.diskbuff = codecs.open(filename, 'a', encoding='utf-8')
-        
-        self.counter = 0
-        self.total_counter = 0
         self.maxlen = maxlen
         self.count_interval = count_interval
         
-    def add(self, obj_memory=None, obj_disk=None):
-        if obj_memory:
-            self.membuff.append(obj_memory)
+        # On-disk buffer
+        self.diskbuffs = [codecs.open(filename, 'a', encoding='utf-8') for filename in filenames]
+        self.counter = self._init_counters(filenames)
         
-        if obj_disk:
-            self.diskbuff.write(obj_disk + '\n')
+        print "created DiskBufferRunner | %s | %d" % (str(filenames), self.counter)
+    
+    def _init_counters(self, filenames):
+        counter = 0
+        for filename in filenames:
+            try:
+                counter = max(counter, int(sh.wc('-l', filename).split()[0]))
+            except:
+                print sys.stderr, "Can't init counters"
+        
+        return counter
+    
+    def add(self, objs=None):
+        
+        for i,obj in enumerate(objs):
+            self.diskbuffs[i].write(obj + '\n')
         
         self.counter += 1
-        self.total_counter += 1
-        if self.should_run():
+        
+        if self.counter >= self.count_interval:
             return self.run()
-    
-    def should_run(self):
-        return self.counter >= self.count_interval
     
     def run(self):
         self.counter = 0
-        
-        if self.total_counter > self.maxlen:
-            self._doRollover()
-        
-        return self.function(self.membuff, self.filename)
+        self._doRollover()
+        return self.function(self.filenames)
     
     def _doRollover(self):
-        tmp_name = self.filename + '.tmp'
-        _ = sh.tail('-n', int(self.maxlen), self.filename, _out=open(tmp_name, 'w'))
-        _ = sh.cp(tmp_name, self.filename)
+        for filename in self.filenames:
+            tmp_name = filename + '.tmp'
+            _ = sh.tail('-n', int(self.maxlen), filename, _out=open(tmp_name, 'w'))
+            _ = sh.cp(tmp_name, filename)
 
