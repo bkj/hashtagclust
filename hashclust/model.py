@@ -37,28 +37,28 @@ class HashtagSupervised:
         model_name = '%s-%d' % (self.output, self.counter)
 
         # Train model
-        logging.info("Training: %s (%d records)" % (model_name, n_records))
-        self.model = self.train(model_name, data_path)
+        logging.info("Training: %s (%d records)" % (self.output, n_records))
+        self.model = self.train(data_path)
 
         if not self.model:
-            logging.info("Failed to train: %s" % model_name)
+            logging.info("Failed to train: %s" % self.output)
             return
 
         label_vectors = self.get_label_vectors()
         if label_vectors:
-            logging.info("Clustering: %s" % model_name)
+            logging.info("Clustering: %s" % self.output)
             clusters = self.clusterer(label_vectors)
 
-            logging.info("Publishing: %s" % model_name)
+            logging.info("Publishing: %s" % self.output)
             time_interval = [min(timestamps), max(timestamps)]
             self.publisher(self.campaignId, clusters, time_interval, self.counter, n_records)
 
-            logging.info("Published: %s" % model_name)
+            logging.info("Published: %s" % self.output)
 
-    def train(self, model_name, data_path):
+    def train(self, data_path):
         try:
             return ft.supervised(
-                data_path,
+                self.output,
                 model_name,
                 **self.config['fasttext']
             )

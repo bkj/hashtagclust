@@ -15,7 +15,7 @@ from kafka import KafkaConsumer
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--topic', type=str, default="dev.qcr-io.traptor.norm")
-    parser.add_argument('--group-id', type=str, default="analytics.hashtagcluster")
+    parser.add_argument('--group-id', type=str, default=None)
     
     parser.add_argument('--earliest', action="store_true")
     parser.add_argument('--max-records', type=float, default=float('Inf'))

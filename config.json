@@ -14,7 +14,7 @@
       },
       "clusterer" : {
             "p_cluster" : 0.1,
-            "n_most_common" : 5000
+            "n_most_common" : 1000
       },
       "publisher" : {
             "topic" : "bkj-hashtag-test-live",

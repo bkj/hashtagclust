@@ -16,6 +16,7 @@ class HashtagPublisher:
         
     def __call__(self, campaignId, data, time_interval, counter, total_message_count):
         clusters = np.unique(data['clusters'])
+        publish_uid = str(uuid1())
         for cluster in clusters:
             sel = data['clusters'] == cluster
             hashtags = data['labs'][sel]
@@ -40,7 +41,8 @@ class HashtagPublisher:
                 "photos": None,
                 "importanceScore": None,
                 
-                "counter" : counter
+                "counter" : counter,
+                "publish_uid" : publish_uid,
             }
             
             logging.info(json.dumps(obj))
