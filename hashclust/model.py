@@ -41,7 +41,7 @@ class HashtagSupervised:
             for d in timestamps]
         
         n_records = len(timestamps)
-        time_interval = [min(timestamps), max(timestamps)]
+        time_interval = np.percentile(timestamps, [1, 99])
         
         # Train model
         logging.info("Training: %s (%d records)" % (self.model_path, n_records))
@@ -62,14 +62,14 @@ class HashtagSupervised:
             logging.info("Published: %s" % self.model_path)
 
     def train(self, text_path):
-        try:
+        # try:
             return ft.supervised(
                 text_path,
-                model_name,
+                self.model_path,
                 **self.config['fasttext']
             )
-        except:
-            return None
+        # except:
+            # return None
 
     def get_label_vectors(self):
         vecs = [self.model._model.dict_get_label_vector(i) 

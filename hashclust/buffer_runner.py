@@ -38,17 +38,17 @@ class DiskBufferRunner:
         
         # On-disk buffer
         self.diskbuffs = [codecs.open(filename, 'a', encoding='utf-8') for filename in filenames]
-        self.counter = self._init_counters(filenames)
+        self.counter = self._init_counter(filenames)
         
         print "created DiskBufferRunner | %s | %d" % (str(filenames), self.counter)
     
-    def _init_counters(self, filenames):
+    def _init_counter(self, filenames):
         counter = 0
         for filename in filenames:
             try:
                 counter = max(counter, int(sh.wc('-l', filename).split()[0]))
             except:
-                print sys.stderr, "Can't init counters"
+                print sys.stderr, "!! DiskBufferRunner._init_counter failed"
         
         return counter
     
@@ -59,11 +59,10 @@ class DiskBufferRunner:
         
         self.counter += 1
         
-        if self.counter >= self.count_interval:
+        if not self.counter % self.count_interval:
             return self.run()
     
     def run(self):
-        self.counter = 0
         self._doRollover()
         return self.function(self.filenames)
     
