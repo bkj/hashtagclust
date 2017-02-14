@@ -29,7 +29,15 @@ class HashtagSupervised:
             else:
                 self.run_fork(data_paths)
                 os._exit(0)
-
+    
+    def _parse_date(self, d):
+        d = d.split('+')[0]
+        if '.' in d:
+            d = d.split('.')[0]
+        
+        p = datetime.strptime(d.split('+')[0], '%Y-%m-%dT%H:%M:%S')
+        return int(p.strftime('%s')) 
+    
     def run_fork(self, data_paths):
         self.clusterer = HashtagClusterer(self.config['clusterer'])
         self.publisher = HashtagPublisher(self.config['publisher'])
@@ -37,8 +45,7 @@ class HashtagSupervised:
         text_path, timestamp_path = data_paths
         
         timestamps = open(timestamp_path).read().splitlines()
-        timestamps = [int(datetime.strptime(d.split('+')[0], '%Y-%m-%dT%H:%M:%S').strftime('%s')) 
-            for d in timestamps]
+        timestamps = map(self._parse_date, timestamps)
         
         n_records = len(timestamps)
         time_interval = np.percentile(timestamps, [1, 99])
@@ -62,15 +69,12 @@ class HashtagSupervised:
             logging.info("Published: %s" % self.model_path)
 
     def train(self, text_path):
-        # try:
-            return ft.supervised(
-                text_path,
-                self.model_path,
-                **self.config['fasttext']
-            )
-        # except:
-            # return None
-
+        return ft.supervised(
+            text_path,
+            self.model_path,
+            **self.config['fasttext']
+        )
+    
     def get_label_vectors(self):
         vecs = [self.model._model.dict_get_label_vector(i) 
             for i in range(self.model._model.dict_nlabels())]

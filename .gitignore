@@ -1,3 +1,8 @@
+dist/*
+hashclust.egg-info/*
+build/*
+counts/*
+hc-data/*
 scratch/*
 tmp/*
 output*
